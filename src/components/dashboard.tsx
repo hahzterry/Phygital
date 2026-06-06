@@ -47,6 +47,7 @@ interface Drop {
 import { useLanguage } from "@/lib/i18n/LanguageContext"
 import { LanguageSwitcher } from "@/lib/i18n/LanguageSwitcher"
 import { shouldShowGate } from "@/lib/trial"
+import { ProfileGate } from "@/components/profile-gate"
 
 export function DashboardComponent() {
   const { t } = useLanguage()
@@ -181,7 +182,7 @@ export function DashboardComponent() {
     return { label: t("dash.active"), color: "text-emerald-600 bg-emerald-50 border-emerald-200" }
   }
 
-  if (status !== "connected" || !account) {
+  if (!account) {
     return null
   }
 
