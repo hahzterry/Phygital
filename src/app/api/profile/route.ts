@@ -112,6 +112,24 @@ export async function PUT(request: Request) {
       }
     }
 
+    // Validate email format if provided (basic RFC-5321 check)
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (sanitized.email && !EMAIL_REGEX.test(sanitized.email)) {
+      return errorResponse({
+        code: ErrorCode.VALIDATION,
+        message: "Invalid email address format",
+        status: 400,
+      });
+    }
+
+    // Fetch the existing profile to check whether email is new
+    // (we only send the welcome email once — on first email submission)
+    const existingProfile = await prisma.userProfile.findUnique({
+      where: { address: address.toLowerCase() },
+      select: { email: true },
+    });
+    const wasEmailNull = !existingProfile?.email;
+
     // Upsert: create the profile if it doesn't exist, update if it does
     const profile = await prisma.userProfile.upsert({
       where: { address: address.toLowerCase() },
@@ -119,8 +137,9 @@ export async function PUT(request: Request) {
       create: { address: address.toLowerCase(), ...sanitized },
     });
 
-    // Send a welcome email if the user has provided their email (non-blocking)
-    if (profile.email) {
+    // Send a welcome email only when the user adds their email for the FIRST TIME
+    // (not on every profile update — that would spam them on every save)
+    if (profile.email && wasEmailNull) {
       sendEmail({
         to: profile.email,
         subject: "Welcome to Stamp",

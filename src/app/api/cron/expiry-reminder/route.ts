@@ -4,18 +4,18 @@
  * ============================================================
  *
  * Scheduled cron job that sends email reminders to drop creators
- * when their drops are about to expire (within the next 24 hours).
+ * when their drops are about to expire (within the next 48 hours).
  *
- * SCHEDULE: Runs every hour (configured in vercel.json)
+ * SCHEDULE: Runs daily at 08:00 UTC (configured in vercel.json)
  *
  * HOW IT WORKS:
  * ─────────────
- * 1. Vercel Cron hits this endpoint every hour with a Bearer token
- * 2. The route finds all drops expiring in the 23–24 hour window
+ * 1. Vercel Cron hits this endpoint with a Bearer token
+ * 2. Finds all drops expiring in the next 48-hour window
  *    that haven't already received a reminder
- * 3. For each drop, it looks up the creator's email via UserProfile
- * 4. Sends a "your drop expires in X hours" email
- * 5. Marks the drop as reminderSent=true to prevent duplicates
+ * 3. Batch-fetches all creator profiles in ONE query (no N+1)
+ * 4. Fires all emails in parallel via Promise.allSettled
+ * 5. Marks ALL sent drops with reminderSent=true in ONE updateMany
  *
  * SECURITY:
  * ─────────
@@ -39,47 +39,73 @@ export async function GET(request: Request) {
   }
 
   // ── Find drops expiring in the next 48 hours ──────────────
-  // Since the cron only runs once per day (Hobby plan limit),
-  // we use a 48-hour window to ensure no drops are missed.
-  // The reminderSent flag prevents duplicate emails.
+  // The reminderSent flag prevents duplicate emails if cron re-runs.
   const in48h = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
   const drops = await prisma.nFT.findMany({
     where: {
-      expiresAt: { gte: new Date(), lte: in48h }, // Expires within next 48 hours
-      reminderSent: false,                    // Haven't sent a reminder yet
-      creatorAddress: { not: null },          // Has a creator to notify
+      expiresAt: { gte: new Date(), lte: in48h },
+      reminderSent: false,
+      creatorAddress: { not: null },
     },
   });
 
-  // ── Send reminder emails ──────────────────────────────────
-  let sent = 0;
-  for (const drop of drops) {
-    // Look up the creator's email from their profile
-    const creator = await prisma.userProfile.findUnique({
-      where: { address: drop.creatorAddress! },
-    });
-    if (creator?.email) {
-      await sendEmail({
-        to: creator.email,
+  if (drops.length === 0) {
+    return NextResponse.json({ sent: 0 });
+  }
+
+  // ── Batch-fetch all creator profiles in ONE query ─────────
+  // Collect unique addresses to avoid duplicate lookups for the
+  // same creator who owns multiple expiring drops.
+  const creatorAddresses = [
+    ...new Set(drops.map((d) => d.creatorAddress!.toLowerCase())),
+  ];
+
+  const profiles = await prisma.userProfile.findMany({
+    where: { address: { in: creatorAddresses } },
+    select: { address: true, email: true },
+  });
+
+  // Build an O(1) address → email lookup map
+  const emailByAddress = new Map(
+    profiles
+      .filter((p) => !!p.email)
+      .map((p) => [p.address.toLowerCase(), p.email!])
+  );
+
+  // ── Fire all emails in parallel ───────────────────────────
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const sentDropIds: string[] = [];
+
+  const emailJobs = drops
+    .filter((drop) => emailByAddress.has(drop.creatorAddress!.toLowerCase()))
+    .map((drop) => {
+      const email = emailByAddress.get(drop.creatorAddress!.toLowerCase())!;
+      sentDropIds.push(drop.id);
+      return sendEmail({
+        to: email,
         subject: `"${drop.name}" expires in 24 hours`,
         html: dropExpiringSoonEmail({
           dropName: drop.name,
           expiresAt: drop.expiresAt!.toISOString(),
           claimsCount: drop.claimsCount,
           maxClaims: drop.maxClaims,
-          dropUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+          dropUrl: `${baseUrl}/dashboard`,
         }),
       });
-      // Mark as sent to prevent duplicate reminders
-      await prisma.nFT.update({
-        where: { id: drop.id },
-        data: { reminderSent: true },
-      });
-      sent++;
-    }
+    });
+
+  // Promise.allSettled: one failing email never blocks the rest
+  await Promise.allSettled(emailJobs);
+
+  // ── Mark all sent drops in a single updateMany ────────────
+  // One DB round-trip instead of N individual updates
+  if (sentDropIds.length > 0) {
+    await prisma.nFT.updateMany({
+      where: { id: { in: sentDropIds } },
+      data: { reminderSent: true },
+    });
   }
 
-  // Return the count of emails sent (useful for monitoring)
-  return NextResponse.json({ sent });
+  return NextResponse.json({ sent: sentDropIds.length });
 }

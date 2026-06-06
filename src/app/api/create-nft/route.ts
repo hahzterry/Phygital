@@ -30,6 +30,7 @@ import { verifyAuth } from "@/lib/auth-helper";
 import { generateBrandedQR } from "@/lib/branded-qr";
 import { sendEmail } from "@/lib/email";
 import { dropCreatedEmail, passwordDropEmail } from "@/lib/email-templates";
+import { isTrialExpired, isProfileComplete } from "@/lib/trial";
 
 // Disable static caching — this route always runs dynamically
 export const dynamic = "force-dynamic";
@@ -90,10 +91,53 @@ export async function POST(request: Request) {
       });
     }
 
+    // ── Validate attributes: must be a flat string→string object ────
+    // Prevents deeply nested objects or prototype-pollution-style keys
+    if (attributes !== undefined && attributes !== null) {
+      if (typeof attributes !== "object" || Array.isArray(attributes)) {
+        return errorResponse({
+          code: ErrorCode.VALIDATION,
+          message: "Attributes must be a key-value object",
+          status: 400,
+        });
+      }
+      const entries = Object.entries(attributes as Record<string, unknown>);
+      const KEY_MAX = 64, VAL_MAX = 256;
+      for (const [k, v] of entries) {
+        if (typeof k !== "string" || k.length > KEY_MAX) {
+          return errorResponse({ code: ErrorCode.VALIDATION, message: `Attribute key too long (max ${KEY_MAX} chars)`, status: 400 });
+        }
+        if (typeof v !== "string" || v.length > VAL_MAX) {
+          return errorResponse({ code: ErrorCode.VALIDATION, message: `Attribute value for "${k}" must be a string (max ${VAL_MAX} chars)`, status: 400 });
+        }
+      }
+    }
+
     // ── Authenticate: verify the wallet signature ───────────
     // Ensures the caller actually owns the creatorAddress wallet
     const auth = await verifyAuth(request, creatorAddress);
     if (!auth.isValid) return auth.response!;
+
+    // ── Server-side trial gate ──────────────────────────────
+    // Prevents expired-trial users from creating drops via direct API calls
+    // (not just the UI gate — this is the real enforcement)
+    if (creatorAddress) {
+      const creatorProfile = await prisma.userProfile.findUnique({
+        where: { address: creatorAddress.toLowerCase() },
+        select: { firstSeenAt: true, name: true, email: true },
+      });
+      if (
+        creatorProfile &&
+        isTrialExpired(creatorProfile.firstSeenAt) &&
+        !isProfileComplete(creatorProfile)
+      ) {
+        return errorResponse({
+          code: ErrorCode.UNAUTHORIZED,
+          message: "Your free trial has expired. Please complete your profile (name + email) to continue.",
+          status: 403,
+        });
+      }
+    }
 
     // ── Hash the password if provided ───────────────────────
     // bcrypt with 10 salt rounds — the plain password is NEVER stored
@@ -111,7 +155,11 @@ export async function POST(request: Request) {
         issuedAt: issuedAt ? new Date(issuedAt) : null,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         attributes: attributes || null,
-        maxClaims: maxClaims ? parseInt(maxClaims, 10) : null,
+        maxClaims: (() => {
+          if (!maxClaims) return null;
+          const parsed = parseInt(maxClaims, 10);
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+        })(),
         password: hashedPassword,     // Store the HASH, never the plain password
         isSoulbound: isSoulbound ?? false,
         isPublic: isPublic ?? false,

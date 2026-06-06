@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -55,7 +55,7 @@ export function DashboardComponent() {
   const status = useActiveWalletConnectionStatus()
   const { disconnect } = useDisconnect()
   const wallet = useActiveWallet()
-  const [selectedNFT, setSelectedNFT] = useState<any | null>(null)
+  const [selectedNFT, setSelectedNFT] = useState<{ id: bigint; metadata: { name?: string; description?: string; image?: string } } | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>("collected")
   const [myDrops, setMyDrops] = useState<Drop[]>([])
   const [dropsLoading, setDropsLoading] = useState(false)
@@ -63,6 +63,27 @@ export function DashboardComponent() {
   const [qrLoadingId, setQrLoadingId] = useState<string | null>(null)
   const [isAdminEmail, setIsAdminEmail] = useState(false)
   const [showGate, setShowGate] = useState(false)
+
+  // Cache the wallet signature so we sign once per session, not once per API call.
+  // This avoids a wallet popup for every dashboard action.
+  const cachedSignatureRef = useRef<string | null>(null)
+
+  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
+    if (!account) return {}
+    if (!cachedSignatureRef.current) {
+      const message = `Authorize Phygital Access for ${account.address}`
+      cachedSignatureRef.current = await account.signMessage({ message })
+    }
+    return {
+      "x-signature": cachedSignatureRef.current,
+      "x-address": account.address,
+    }
+  }, [account])
+
+  // Clear the cached signature when the account changes (different wallet connected)
+  useEffect(() => {
+    cachedSignatureRef.current = null
+  }, [account?.address])
 
   const { data: ownedNFTs, isLoading: isLoadingOwnedNFTs } = useReadContract(
     getOwnedNFTs,
@@ -73,15 +94,8 @@ export function DashboardComponent() {
     if (!account?.address) return
     setDropsLoading(true)
     try {
-      const message = `Authorize Phygital Access for ${account.address}`
-      const signature = await account.signMessage({ message })
-
-      const res = await fetch(`/api/my-drops?address=${account.address}`, {
-        headers: {
-          "x-signature": signature,
-          "x-address": account.address,
-        },
-      })
+      const headers = await getAuthHeaders()
+      const res = await fetch(`/api/my-drops?address=${account.address}`, { headers })
       const data = await res.json()
       if (res.ok) setMyDrops(data.drops)
     } catch {
@@ -89,7 +103,7 @@ export function DashboardComponent() {
     } finally {
       setDropsLoading(false)
     }
-  }, [account?.address])
+  }, [account?.address, getAuthHeaders])
 
   useEffect(() => {
     if (activeTab === "drops" && account?.address) fetchMyDrops()
@@ -105,11 +119,8 @@ export function DashboardComponent() {
     async function checkAdminEmail() {
       if (!account?.address) { setIsAdminEmail(false); return }
       try {
-        const message = `Authorize Phygital Access for ${account.address}`
-        const signature = await account.signMessage({ message })
-        const res = await fetch(`/api/profile?address=${account.address}`, {
-          headers: { "x-signature": signature, "x-address": account.address },
-        })
+        const headers = await getAuthHeaders()
+        const res = await fetch(`/api/profile?address=${account.address}`, { headers })
         if (!res.ok) { setIsAdminEmail(false); return }
         const data = await res.json()
         const profile = data.profile
@@ -129,7 +140,7 @@ export function DashboardComponent() {
       }
     }
     checkAdminEmail()
-  }, [account?.address])
+  }, [account?.address, getAuthHeaders])
 
   const copyClaimLink = async (id: string) => {
     const url = `${window.location.origin}/claim?id=${id}`
@@ -143,14 +154,8 @@ export function DashboardComponent() {
     if (!account) return
     setQrLoadingId(drop.id)
     try {
-      const message = `Authorize Phygital Access for ${account.address}`
-      const signature = await account.signMessage({ message })
-      const res = await fetch(`/api/qr?id=${drop.id}`, {
-        headers: {
-          "x-signature": signature,
-          "x-address": account.address,
-        },
-      })
+      const headers = await getAuthHeaders()
+      const res = await fetch(`/api/qr?id=${drop.id}`, { headers })
       const data = await res.json()
       if (!res.ok) { toast.error("Failed to regenerate QR"); return }
       const link = document.createElement("a")
@@ -527,13 +532,15 @@ export function DashboardComponent() {
                             <div key={drop.id} className="bg-white border border-black/5 rounded-[24px] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.06)] p-6 flex flex-col gap-4 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.01] transition-all duration-300 group">
                               {/* Top: image + name */}
                               <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-[#f8f9ff] border border-black/5 flex-shrink-0">
-                                  <img
+                                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-[#f8f9ff] border border-black/5 flex-shrink-0 relative">
+                                  <Image
                                     src={drop.image?.startsWith("ipfs://")
                                       ? drop.image.replace("ipfs://", "https://ipfs.io/ipfs/")
                                       : drop.image}
                                     alt={drop.name}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
+                                    unoptimized={drop.image?.startsWith("ipfs://")}
                                   />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -702,7 +709,7 @@ export function DashboardComponent() {
               </div>
               <div className="flex flex-col gap-2 mt-6">
                 <a
-                  href={`https://testnets.opensea.io/assets/base-sepolia/0xe5492494c0423394A4a1FaaB6E733C35580F9BF9/${selectedNFT.id}`}
+                href={`https://testnets.opensea.io/assets/base-sepolia/${process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS ?? contract.address}/${selectedNFT.id}`}
                   target="_blank" rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-black hover:bg-black/90 text-white py-3.5 px-4 rounded-[16px] font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-[0_8px_20px_rgba(0,0,0,0.15)] uppercase tracking-wider"
                   onClick={() => toast.info("Opening on OpenSea Testnet...")}
@@ -710,7 +717,7 @@ export function DashboardComponent() {
                   {t("dash.viewOpensea")} <ExternalLink className="h-4 w-4" />
                 </a>
                 <a
-                  href={`https://sepolia.basescan.org/token/0xe5492494c0423394A4a1FaaB6E733C35580F9BF9?a=${selectedNFT.id}`}
+                href={`https://sepolia.basescan.org/token/${process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS ?? contract.address}?a=${selectedNFT.id}`}
                   target="_blank" rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-black/[0.04] hover:bg-black/[0.08] text-black py-3.5 px-4 rounded-[16px] font-black text-sm transition-all border border-black/5 uppercase tracking-wider"
                   onClick={() => toast.info("Opening BaseScan...")}
