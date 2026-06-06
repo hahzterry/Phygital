@@ -60,6 +60,7 @@ export function DashboardComponent() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [qrLoadingId, setQrLoadingId] = useState<string | null>(null)
   const [isAdminEmail, setIsAdminEmail] = useState(false)
+  const [showGate, setShowGate] = useState(false)
 
   const { data: ownedNFTs, isLoading: isLoadingOwnedNFTs } = useReadContract(
     getOwnedNFTs,
@@ -110,6 +111,11 @@ export function DashboardComponent() {
         if (!res.ok) { setIsAdminEmail(false); return }
         const data = await res.json()
         const profile = data.profile
+
+        if (profile && shouldShowGate(profile)) {
+          setShowGate(true)
+        }
+
         const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? ""
         if (adminEmail && profile?.email?.toLowerCase() === adminEmail.toLowerCase()) {
           setIsAdminEmail(true)
@@ -174,8 +180,25 @@ export function DashboardComponent() {
     return { label: t("dash.active"), color: "text-emerald-600 bg-emerald-50 border-emerald-200" }
   }
 
+  if (status !== "connected" || !account) {
+    return null
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#f8f9ff] text-black relative selection:bg-indigo-500/30" style={{ fontFamily: "Inter, sans-serif" }}>
+    <>
+      {showGate && account && (
+        <ProfileGate
+          address={account.address}
+          onComplete={() => setShowGate(false)}
+          getHeaders={async () => {
+            const message = `Authorize Phygital Access for ${account.address}`
+            const signature = await account.signMessage({ message })
+            return { "x-signature": signature, "x-address": account.address }
+          }}
+        />
+      )}
+
+      <div className="flex flex-col min-h-screen bg-[#f8f9ff] text-black relative selection:bg-indigo-500/30" style={{ fontFamily: "Inter, sans-serif" }}>
       <AutoConnect client={client} />
 
       {/* Background Ambience — matching landing page */}
@@ -700,5 +723,6 @@ export function DashboardComponent() {
 
       <Footer />
     </div>
+    </>
   )
 }

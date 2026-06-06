@@ -17,6 +17,7 @@ export const dictionaries = {
     'nav.explore': 'Explore',
     'nav.connect': 'Connect',
     'nav.dashboard': 'Dashboard',
+    'nav.profile': 'Profile',
     'nav.signOut': 'Sign Out',
     // Hero
     'hero.badge': 'Next-Gen Physical Commerce',
@@ -141,6 +142,7 @@ export const dictionaries = {
     'nav.explore': 'खोजें',
     'nav.connect': 'जुड़ें',
     'nav.dashboard': 'डैशबोर्ड',
+    'nav.profile': 'प्रोफ़ाइल',
     'nav.signOut': 'साइन आउट',
     // Hero
     'hero.badge': 'नेक्स्ट-जेन फिजिकल कॉमर्स',
@@ -265,6 +267,7 @@ export const dictionaries = {
     'nav.explore': 'Explorer',
     'nav.connect': 'Se connecter',
     'nav.dashboard': 'Tableau de bord',
+    'nav.profile': 'Profil',
     'nav.signOut': 'Se déconnecter',
     // Hero
     'hero.badge': 'Commerce physique de nouvelle génération',
@@ -389,6 +392,7 @@ export const dictionaries = {
     'nav.explore': 'دریافت کریں',
     'nav.connect': 'مربوط کریں',
     'nav.dashboard': 'ڈیش بورڈ',
+    'nav.profile': 'پروفائل',
     'nav.signOut': 'لاگ آؤٹ',
     // Hero
     'hero.badge': 'نیکسٹ-جین فزیکل کامرس',
@@ -513,6 +517,7 @@ export const dictionaries = {
     'nav.explore': 'Entdecken',
     'nav.connect': 'Verbinden',
     'nav.dashboard': 'Dashboard',
+    'nav.profile': 'Profil',
     'nav.signOut': 'Abmelden',
     // Hero
     'hero.badge': 'Next-Gen Physical Commerce',

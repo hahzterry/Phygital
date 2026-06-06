@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     // Returns an IPFS URI like "ipfs://QmXxx..."
     const uri = await upload({ client, files: [file] });
 
-    return NextResponse.json({ uri });
+    return NextResponse.json({ ipfsUrl: uri, uri });
   } catch (error) {
     console.error("IPFS upload error:", error);
     return NextResponse.json(

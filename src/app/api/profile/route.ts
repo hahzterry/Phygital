@@ -64,11 +64,18 @@ export async function GET(request: Request) {
     }
 
     // Look up the profile (returns null if the user hasn't created one yet)
-    const profile = await prisma.userProfile.findUnique({
+    let profile = await prisma.userProfile.findUnique({
       where: { address: address.toLowerCase() },
     });
 
-    return NextResponse.json({ profile: profile ?? null });
+    // Auto-create a profile stub on first visit to record trial start (firstSeenAt)
+    if (!profile) {
+      profile = await prisma.userProfile.create({
+        data: { address: address.toLowerCase() },
+      });
+    }
+
+    return NextResponse.json({ profile });
   } catch (error) {
     return errorResponse({ code: ErrorCode.INTERNAL, message: "Failed to fetch profile", status: 500, details: error instanceof Error ? error.message : "Internal error" });
   }

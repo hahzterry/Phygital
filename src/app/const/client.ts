@@ -22,7 +22,7 @@
  */
 
 import { createThirdwebClient } from "thirdweb";
-import { baseSepolia } from "thirdweb/chains";
+import { activeChain } from "@/lib/chains.config";
 
 // NEXT_PUBLIC_ prefix makes this available in both server and client code
 const clientId = process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || "00000000000000000000000000000000"; // Fallback for Vercel build step
@@ -30,5 +30,5 @@ const clientId = process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID || "0000000000000000
 // Shared Thirdweb client instance — used for wallet connections, contract calls, etc.
 export const client = createThirdwebClient({ clientId });
 
-// The blockchain network this app operates on (Base Sepolia = testnet)
-export const chain = baseSepolia;
+// The blockchain network this app operates on (driven by NEXT_PUBLIC_CHAIN env var)
+export const chain = activeChain;

@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "ipfs.io" },
+      { protocol: "https", hostname: "*.ipfs.dweb.link" },
+      { protocol: "https", hostname: "*.thirdwebstorage.com" },
+      { protocol: "https", hostname: "gateway.pinata.cloud" },
+    ],
+  },
   async headers() {
     return [
       {
@@ -36,8 +44,9 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://ipfs.io https://*.ipfs.dweb.link",
-              "connect-src 'self' https://*.thirdweb.com https://*.upstash.io wss://*.thirdweb.com",
+              "img-src 'self' data: blob: https: http:",
+              "connect-src 'self' https://*.thirdweb.com https://*.thirdwebstorage.com https://*.upstash.io https://ipfs.io wss://*.thirdweb.com",
+              "frame-src 'self' https://*.thirdweb.com",
               "frame-ancestors 'none'",
             ].join("; "),
           },

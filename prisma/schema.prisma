@@ -93,6 +93,7 @@ model UserProfile {
   twitter   String?                                           // Twitter/X handle
   website   String?                                           // Personal website URL
   email     String?                                           // Email for notifications
+  firstSeenAt DateTime @default(now())                        // Trial start: set when wallet first connects
   createdAt DateTime @default(now())                          // When the profile was created
   updatedAt DateTime @updatedAt                               // Auto-updated on any change
 }

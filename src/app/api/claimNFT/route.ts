@@ -33,12 +33,13 @@ import {
   sendTransaction,
   waitForReceipt,
 } from "thirdweb";
-import { baseSepolia } from "thirdweb/chains";
+import { activeChain, txExplorerUrl } from "@/lib/chains.config";
 import { privateKeyToAccount } from "thirdweb/wallets";
 import { mintTo } from "thirdweb/extensions/erc1155";
 import { ErrorCode, errorResponse } from "@/lib/error-handler";
 import { sendEmail } from "@/lib/email";
 import { dropClaimedCreatorEmail, claimSuccessEmail, dropFullyClaimedEmail } from "@/lib/email-templates";
+import { validateWalletAddress } from "@/lib/claim-validators";
 
 // Disable static caching — this route must always run dynamically
 export const dynamic = "force-dynamic";
@@ -58,9 +59,8 @@ export async function POST(request: Request) {
       });
     }
 
-    // FIX 6: Validate wallet address format (must be a valid Ethereum address)
-    const ETH_ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
-    if (!ETH_ADDRESS_REGEX.test(address)) {
+    // Validate wallet address format (must be a valid Ethereum address)
+    if (!validateWalletAddress(address)) {
       return errorResponse({
         code: ErrorCode.VALIDATION,
         message: "Invalid wallet address format",
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
 
     const contract = getContract({
       client,
-      chain: baseSepolia,
+      chain: activeChain,
       address: process.env.NFT_CONTRACT_ADDRESS!,
     });
 
@@ -208,7 +208,7 @@ export async function POST(request: Request) {
     const sentTx = await sendTransaction({ transaction, account });
     const receipt = await waitForReceipt({
       client,
-      chain: baseSepolia,
+      chain: activeChain,
       transactionHash: sentTx.transactionHash,
     });
 
@@ -247,7 +247,7 @@ export async function POST(request: Request) {
       console.error("[claimNFT] NEXT_PUBLIC_APP_URL is not set");
     }
     const baseUrl = appUrl ?? "";
-    const explorerBase = "https://sepolia.basescan.org/tx";
+    const explorerBase = txExplorerUrl;
 
     const emailJobs = [];
 

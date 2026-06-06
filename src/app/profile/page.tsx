@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   User, Camera, Copy, Check, LogOut, ArrowLeft,
   Github, Linkedin, Instagram, Twitter, Globe,
-  Phone, MapPin, FileText, Sparkles, Save,
+  Phone, MapPin, FileText, Sparkles, Save, ShieldCheck,
 } from "lucide-react";
 
 interface ProfileData {
@@ -53,6 +53,7 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isAdminEmail, setIsAdminEmail] = useState(false);
 
   // Redirect if not signed in
   useEffect(() => {
@@ -99,6 +100,12 @@ export default function ProfilePage() {
           };
           setProfile(p);
           setOriginal(p);
+
+          // Check if this user is an admin by email
+          const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+          if (adminEmail && data.profile.email?.toLowerCase() === adminEmail.toLowerCase()) {
+            setIsAdminEmail(true);
+          }
         }
       } catch {
         toast.error("Could not load profile");
@@ -210,12 +217,21 @@ export default function ProfilePage() {
             <span className="text-xl font-extrabold text-stone-900 tracking-tight">Phygital</span>
           </Link>
           {wallet && (
-            <button
-              onClick={() => { disconnect(wallet); toast.success("Signed out"); router.push("/"); }}
-              className="flex items-center gap-2 text-stone-500 hover:text-red-500 transition-colors font-medium text-sm"
-            >
-              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign Out</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {isAdminEmail && (
+                <Link href="/admin">
+                  <button className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-all border border-indigo-100">
+                    <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline">Admin</span>
+                  </button>
+                </Link>
+              )}
+              <button
+                onClick={() => { disconnect(wallet); toast.success("Signed out"); router.push("/"); }}
+                className="flex items-center gap-2 text-stone-500 hover:text-red-500 transition-colors font-medium text-sm"
+              >
+                <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
           )}
         </div>
       </header>
