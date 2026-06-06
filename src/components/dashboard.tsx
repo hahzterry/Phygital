@@ -46,6 +46,7 @@ interface Drop {
 
 import { useLanguage } from "@/lib/i18n/LanguageContext"
 import { LanguageSwitcher } from "@/lib/i18n/LanguageSwitcher"
+import { shouldShowGate } from "@/lib/trial"
 
 export function DashboardComponent() {
   const { t } = useLanguage()
