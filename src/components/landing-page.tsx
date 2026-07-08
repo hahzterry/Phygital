@@ -89,7 +89,7 @@ function NavBar({ account, wallet, disconnect, handleConnect, scroll }: any) {
           <div className="relative w-10 h-10 transition-transform duration-500 group-hover:scale-110">
             <img src={phygitalLogo} alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
-          <span className="text-2xl font-black tracking-tighter transition-colors text-black">{t("foot.brandName") || "Phygital"}</span>
+          <span className="text-2xl font-black tracking-tighter transition-colors text-black">{t("foot.brandName") || "🔍"}</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-10">
