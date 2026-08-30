@@ -95,7 +95,7 @@ export function ClaimCertificate({
               }}
             >
               <div style={{ fontSize: "22px", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.5px" }}>
-                Phygital
+                🏁 CLAIM
               </div>
             </div>
             <p style={{ margin: 0, fontSize: "12px", fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>
@@ -123,7 +123,7 @@ export function ClaimCertificate({
               />
               <div>
                 <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#818cf8" }}>
-                  NFT Drop
+                  3 Word Pin Drop
                 </p>
                 <h2 style={{ margin: "0 0 8px", fontSize: "24px", fontWeight: 800, color: "#1f2937", letterSpacing: "-0.3px" }}>
                   {nftName}
@@ -181,7 +181,7 @@ export function ClaimCertificate({
 
           {/* Footer */}
           <div style={{ background: "#f9fafb", borderTop: "1px solid #f0f0f0", padding: "16px 40px", textAlign: "center" }}>
-            <p style={{ margin: 0, fontSize: "11px", color: "#9ca3af" }}>phygital.app · Powered by Thirdweb & Base</p>
+            <p style={{ margin: 0, fontSize: "11px", color: "#9ca3af" }}>claim.3wordpin.com · Powered by 3 Word Pin</p>
           </div>
         </div>
       </div>
