@@ -672,18 +672,18 @@ function PhygitalFooter({ scroll }: { scroll: (id: string) => void }) {
            <div className="relative z-10 space-y-8 w-full">
              <div className="space-y-4">
                <span className="text-[9px] font-black uppercase tracking-[0.5em] text-indigo-400/50">
-                 developed and maintained by
+                 Manifested by 
                </span>
                <p className="text-2xl font-black tracking-tighter text-white">
-                 Tanish S. Pareek
+                 Wizard of Hahz
                </p>
              </div>
 
              <div className="flex items-center justify-center gap-4">
                {[
-                 { icon: Linkedin, href: "https://linkedin.com/in/tanishsunitapareek", label: "LinkedIn", color: "hover:bg-blue-600/20 hover:text-blue-400" },
-                 { icon: Github, href: "https://github.com/trigno1", label: "GitHub", color: "hover:bg-white/10 hover:text-white" },
-                 { icon: Mail, href: "mailto:tanish@phygital.xyz", label: "Email", color: "hover:bg-indigo-600/20 hover:text-indigo-400" }
+                 { icon: Linkedin, href: "https://linkedin.com/in/hahzterry", label: "LinkedIn", color: "hover:bg-blue-600/20 hover:text-blue-400" },
+                 { icon: Github, href: "https://social.3wordpin.com/pin/u/hahz/", label: "3 Word Pin Social", color: "hover:bg-white/10 hover:text-white" },
+                 { icon: Mail, href: "mailto:hahz5d@pm.me", label: "Email", color: "hover:bg-indigo-600/20 hover:text-indigo-400" }
                ].map((social, idx) => (
                  <a 
                    key={idx}
@@ -702,8 +702,8 @@ function PhygitalFooter({ scroll }: { scroll: (id: string) => void }) {
       </div>
       
       <div className="max-w-7xl mx-auto px-8 pb-12 flex justify-between items-center text-[10px] font-black text-white/10 uppercase tracking-[0.5em]">
-         <span>Encrypted Connectivity</span>
-         <span>Phygital Protocol v1.0</span>
+         <span>Tokenize The World Mapped To A 3 Word Pin</span>
+         <span>🏁 3 Word Pin Claim</span>
       </div>
     </footer>
   );
