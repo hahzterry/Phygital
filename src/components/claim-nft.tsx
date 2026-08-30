@@ -141,7 +141,7 @@ export function ClaimNft({ nft }: ClaimNftProps) {
             <Sparkles className="h-3.5 w-3.5" /> Direct Claim
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-stone-900 tracking-tight leading-tight">
-            Claim Your NFT
+            Claim Your 3 Word Pin
           </h1>
           <p className="mt-4 text-stone-500 max-w-lg mx-auto">
             Connect your wallet to securely receive this digital asset directly into your portfolio.
@@ -250,7 +250,7 @@ export function ClaimNft({ nft }: ClaimNftProps) {
                 </div>
                 <DialogTitle className="text-2xl font-bold text-stone-900 text-center mb-2">Successfully Claimed!</DialogTitle>
                 <DialogDescription className="text-stone-500 text-sm text-center mb-5">
-                  You are now the official owner of this Phygital asset.
+                  You are now the official owner of this 3 Word Pin.
                 </DialogDescription>
                 
                 <div className="w-40 h-40 rounded-xl overflow-hidden shadow-md border-2 border-white bg-stone-50 mb-4 flex items-center justify-center">
@@ -273,7 +273,7 @@ export function ClaimNft({ nft }: ClaimNftProps) {
             <div className="w-full flex flex-col gap-3">
               <Button 
                 onClick={() => {
-                  const tweetText = `I just claimed my Phygital asset: ${nft.name}! 🚀\n\nCheck it out here:`;
+                  const tweetText = `I just claimed my 3 Word Pin: ${nft.name}! 🚀\n\nCheck it out here:`;
                   const url = window.location.href;
                   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(url)}`, '_blank');
                 }} 
