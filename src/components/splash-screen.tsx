@@ -117,10 +117,10 @@ export function SplashScreen() {
         {/* Brand text */}
         <div className="splash-text-enter flex flex-col items-center gap-2 sm:gap-3 mb-10 sm:mb-12">
           <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-white tracking-tight drop-shadow-sm">
-            Phygital
+            🏁 CLAIM.
           </h1>
           <p className="text-[10px] sm:text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400 uppercase tracking-[0.4em] sm:tracking-[0.5em]">
-            Physical × Digital
+            3 WORD PIN
           </p>
         </div>
 
