@@ -24,7 +24,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Phygital — Create & Claim Physical NFT Drops",
+  title: "3 Word Pin Claim — Create & Claim Physical RWA Drops",
   description: "Create NFT drops with a QR code. Scan any Phygital QR in the real world and instantly claim an on-chain NFT to your invisible smart wallet — no crypto experience needed.",
   icons: {
     icon: "/phygital_ultra_logo.png",
