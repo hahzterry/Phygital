@@ -1,14 +1,15 @@
 "use client"
 import Link from "next/link";
 import Image from "next/image";
-import { Github, Mail, Linkedin } from "lucide-react";
+import { Mail, Linkedin } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const DEVELOPER = {
-  name: "Tanish S Pareek",
+  name: "Wizard of Hahz",
   github: "https://github.com/trigno1",
-  linkedin: "https://www.linkedin.com/in/tanish-sunita-pareek/",
-  email: "tanishpareek2005@gmail.com",
+  linkedin: "https://www.linkedin.com/in/hahzterry/",
+  email: "hahz5d@pm.me",
+  socialPin: "https://social.3wordpin.com/pin/u/hahz/", // Added social pin URL
 };
 
 interface FooterProps {
@@ -54,7 +55,8 @@ export function Footer({ dark = false }: FooterProps) {
           {[
             { icon: Github, href: DEVELOPER.github, title: "GitHub", color: "hover:bg-white/10 hover:text-white" },
             { icon: Linkedin, href: DEVELOPER.linkedin, title: "LinkedIn", color: "hover:bg-blue-600/20 hover:text-blue-400" },
-            { icon: Mail, href: `mailto:${DEVELOPER.email}`, title: "Email", color: "hover:bg-indigo-600/20 hover:text-indigo-400" }
+            { icon: Mail, href: `mailto:${DEVELOPER.email}`, title: "Email", color: "hover:bg-indigo-600/20 hover:text-indigo-400" },
+            { icon: () => <span className="text-lg">💬</span>, href: DEVELOPER.socialPin, title: "Social Pin", color: "hover:bg-emerald-600/20 hover:text-emerald-400" }
           ].map((item, i) => (
             <a key={i} href={item.href} target="_blank" rel="noopener noreferrer" title={item.title}
               className={`p-3 rounded-xl ${iconBg} ${textSub} transition-all duration-300 hover:scale-110 hover:-translate-y-1 ${item.color}`}>
